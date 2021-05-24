@@ -25,33 +25,8 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostSerializer
     permission_classes = [IsAuthorOrReadOnly]
 
-    def list(self, request):
-        serializer = self.serializer_class(self.queryset, many=True)
-        return Response(serializer.data)
-
-    def create(self, request):
-        serializer = self.serializer_class(data=request.data)
-        if serializer.is_valid():
-            serializer.save(author=self.request.user)
-            return Response(serializer.data)
-        return Response(status=status.HTTP_400_BAD_REQUEST)
-
-    def partial_update(self, request, pk):
-        post = get_object_or_404(self.queryset, id=pk)
-        if request.user == post.author:
-            serializer = self.serializer_class(post, data=request.data)
-            if serializer.is_valid():
-                serializer.save()
-                return Response(serializer.data)
-            return Response(status=status.HTTP_400_BAD_REQUEST)
-        return Response(status=status.HTTP_403_FORBIDDEN)
-
-    def destroy(self, request, pk):
-        post = get_object_or_404(self.queryset, id=pk)
-        if request.user == post.author:
-            post.delete()
-            return Response('Пост удален!')
-        return Response(status=status.HTTP_403_FORBIDDEN)
+    def perform_create(self, serializer):
+        serializer.save(author=self.request.user)
 
 
 class CommentViewSet(viewsets.ModelViewSet):
@@ -96,5 +71,3 @@ class CommentViewSet(viewsets.ModelViewSet):
             comment.delete()
             return Response('Коммент удален!')
         return Response(status=status.HTTP_403_FORBIDDEN)
-
-
